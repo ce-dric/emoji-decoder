@@ -11,6 +11,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
+    <!-- Twemoji Library -->
+    <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js"></script>
+
     <style>
         :root {
             --bg-gradient-1: #4158D0;
@@ -66,7 +69,7 @@
             position: relative;
             z-index: 10;
             width: 90%;
-            max-width: 450px;
+            max-width: 550px;
             padding: 40px 30px;
             background: var(--glass-bg);
             backdrop-filter: blur(16px);
@@ -100,54 +103,68 @@
         /* Input Field */
         .input-group {
             position: relative;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
-        input[type="text"] {
-            width: 100px;
-            height: 100px;
-            font-size: 40px;
-            text-align: center;
+        textarea {
+            width: 100%;
+            height: 80px;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-family: 'Inter', sans-serif;
             background: rgba(255, 255, 255, 0.2);
             border: 2px dashed rgba(255, 255, 255, 0.5);
-            border-radius: 20px;
+            border-radius: 16px;
             color: white;
             outline: none;
             transition: all 0.3s ease;
             box-sizing: border-box;
+            resize: none;
         }
 
-        input[type="text"]:focus {
+        textarea:focus {
             background: rgba(255, 255, 255, 0.3);
             border-style: solid;
             border-color: white;
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
         }
 
-        input[type="text"]::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+        textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
             font-size: 16px;
         }
 
         /* Result Area */
         .result-area {
-            min-height: 160px;
+            min-height: 120px;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 20px;
-            padding: 20px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 16px;
+            padding: 25px;
             margin-bottom: 10px;
+            word-break: break-word;
+            text-align: left;
+            font-size: 20px;
+            line-height: 1.6;
         }
 
-        #emoji-image {
-            max-width: 120px;
-            max-height: 120px;
-            display: none;
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+        #status-message {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            width: 100%;
+        }
+
+        /* Twemoji CSS */
+        img.emoji {
+            height: 1.2em;
+            width: 1.2em;
+            margin: 0 .15em 0 .15em;
+            vertical-align: -0.2em;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
         }
 
         @keyframes popIn {
@@ -155,21 +172,9 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        #status-message {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        #unicode-info {
-            font-family: 'Outfit', monospace;
-            font-size: 12px;
-            opacity: 0.6;
-            margin-top: 15px;
-        }
-
         /* Footer */
         footer {
-            margin-top: 20px;
+            margin-top: 25px;
             font-size: 12px;
             opacity: 0.5;
         }
@@ -190,87 +195,66 @@
 
     <div class="glass-container">
         <h1>Emoji Decoder 🔍</h1>
-        <p class="subtitle">Paste the broken "square box" (□) emoji below<br>to reveal what it actually is.</p>
+        <p class="subtitle">Paste the entire message containing broken "square box" (□) emojis<br>to reveal what they actually are.</p>
 
         <div class="input-group">
-            <input type="text" id="emoji-input" placeholder="Paste" autocomplete="off" spellcheck="false">
+            <textarea id="emoji-input" placeholder="Paste your message here..." autocomplete="off" spellcheck="false"></textarea>
         </div>
 
-        <div class="result-area">
-            <img id="emoji-image" alt="Decoded Emoji">
-            <div id="status-message">The decoded emoji will appear here.</div>
+        <div class="result-area" id="result-area">
+            <div id="status-message">The decoded message will appear here.</div>
         </div>
         
-        <div id="unicode-info"></div>
-
         <footer>
-            Images by <a href="https://github.com/twitter/twemoji" target="_blank">Twemoji</a>
+            Parsed and rendered using <a href="https://github.com/twitter/twemoji" target="_blank">Twemoji</a>
         </footer>
     </div>
 
     <script>
         const inputField = document.getElementById('emoji-input');
-        const emojiImg = document.getElementById('emoji-image');
-        const statusMsg = document.getElementById('status-message');
-        const unicodeInfo = document.getElementById('unicode-info');
+        const resultArea = document.getElementById('result-area');
+        const defaultMessage = '<div id="status-message">The decoded message will appear here.</div>';
 
-        function getTwemojiUrl(char) {
-            let codepoints = [];
-            for (let i = 0; i < char.length; i++) {
-                const codePoint = char.codePointAt(i);
-                if (codePoint) {
-                    codepoints.push(codePoint.toString(16));
-                    if (codePoint > 0xFFFF) {
-                        i++; 
-                    }
-                }
-            }
-
-            const code = codepoints.join('-');
-            return {
-                url: `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/${code}.png`,
-                code: codepoints.map(c => 'U+' + c.toUpperCase()).join(' ')
-            };
-        }
-
-        function decodeEmoji() {
-            let val = inputField.value.trim();
+        function decodeMessage() {
+            const val = inputField.value.trim();
+            
             if (!val) {
-                resetUI();
+                resultArea.innerHTML = defaultMessage;
                 return;
             }
 
-            val = val.split(' ')[0];
+            // 1. Set text securely to prevent XSS
+            resultArea.textContent = val;
 
-            const { url, code } = getTwemojiUrl(val);
-
-            statusMsg.style.display = 'none';
-            emojiImg.style.display = 'none';
-            unicodeInfo.innerText = `Code: ${code}`;
+            // 2. Parse text and replace emojis with Twemoji <img> tags
+            twemoji.parse(resultArea, {
+                base: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/',
+                folder: '72x72',
+                ext: '.png'
+            });
             
-            const tempImg = new Image();
-            tempImg.onload = function() {
-                emojiImg.src = url;
-                emojiImg.style.display = 'block';
-            };
-            tempImg.onerror = function() {
-                statusMsg.innerHTML = "Unsupported or invalid character. 😥";
-                statusMsg.style.color = "#ffcccc";
-                statusMsg.style.display = 'block';
-                emojiImg.style.display = 'none';
-            };
-            tempImg.src = url;
+            // If the text contains only emojis, make them larger
+            const childNodes = Array.from(resultArea.childNodes);
+            const hasText = childNodes.some(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '');
+            
+            if (!hasText) {
+                const images = resultArea.querySelectorAll('img.emoji');
+                images.forEach(img => {
+                    img.style.height = '2.5em';
+                    img.style.width = '2.5em';
+                    img.style.margin = '0 0.1em';
+                });
+                resultArea.style.justifyContent = 'center';
+                resultArea.style.display = 'flex';
+                resultArea.style.flexWrap = 'wrap';
+            } else {
+                resultArea.style.display = 'block';
+            }
         }
 
-        function resetUI() {
-            emojiImg.style.display = 'none';
-            statusMsg.innerHTML = "The decoded emoji will appear here.";
-            statusMsg.style.color = "rgba(255, 255, 255, 0.7)";
-            statusMsg.style.display = 'block';
-            unicodeInfo.innerText = "";
-        }
-
-        inputField.addEventListener('input', decodeEmoji);
+        inputField.addEventListener('input', decodeMessage);
+        
+        // Auto-select text on focus for easy pasting
         inputField.addEventListener('focus', () => {
             inputField.select();
         });
