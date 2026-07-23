@@ -6,6 +6,11 @@
     <meta name="description" content="A web tool that decodes broken emojis (square boxes) on Windows into their actual emoji images. Just copy and paste.">
     <title>Emoji Decoder</title>
     
+    <!-- PWA Manifest & Theme Color -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#C850C0">
+    <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f50d.png">
+    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -258,6 +263,19 @@
         inputField.addEventListener('focus', () => {
             inputField.select();
         });
+
+        // Register Service Worker for PWA Support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                .then(registration => {
+                    console.log('SW registered: ', registration);
+                })
+                .catch(registrationError => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+            });
+        }
     </script>
 </body>
 </html>

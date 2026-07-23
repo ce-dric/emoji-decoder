@@ -1,0 +1,21 @@
+{
+  "name": "Emoji Decoder",
+  "short_name": "Decoder",
+  "description": "Decode broken emojis (square boxes) on Windows instantly.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#4158D0",
+  "theme_color": "#C850C0",
+  "icons": [
+    {
+      "src": "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f50d.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f50d.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
