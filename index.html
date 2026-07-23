@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A web tool that decodes broken emojis (square boxes) on Windows into their actual emoji images. Just copy and paste.">
+    <title>Emoji Decoder</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-gradient-1: #4158D0;
+            --bg-gradient-2: #C850C0;
+            --bg-gradient-3: #FFCC70;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --text-color: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', 'Outfit', sans-serif;
+            background-color: var(--bg-gradient-1);
+            background-image: linear-gradient(43deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 46%, var(--bg-gradient-3) 100%);
+            background-attachment: fixed;
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        /* Animated Background Blobs */
+        .blob {
+            position: absolute;
+            filter: blur(80px);
+            z-index: 0;
+            opacity: 0.6;
+        }
+        .blob-1 {
+            width: 400px; height: 400px;
+            background: #ff0055;
+            top: -100px; left: -100px;
+            animation: move 10s infinite alternate;
+        }
+        .blob-2 {
+            width: 500px; height: 500px;
+            background: #00ccff;
+            bottom: -200px; right: -100px;
+            animation: move 12s infinite alternate-reverse;
+        }
+
+        @keyframes move {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(50px, 50px) scale(1.1); }
+        }
+
+        /* Glassmorphism Container */
+        .glass-container {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 450px;
+            padding: 40px 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .glass-container:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            font-size: 15px;
+            font-weight: 300;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+
+        /* Input Field */
+        .input-group {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            width: 100px;
+            height: 100px;
+            font-size: 40px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            color: white;
+            outline: none;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus {
+            background: rgba(255, 255, 255, 0.3);
+            border-style: solid;
+            border-color: white;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+
+        input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 16px;
+        }
+
+        /* Result Area */
+        .result-area {
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 10px;
+        }
+
+        #emoji-image {
+            max-width: 120px;
+            max-height: 120px;
+            display: none;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        #status-message {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        #unicode-info {
+            font-family: 'Outfit', monospace;
+            font-size: 12px;
+            opacity: 0.6;
+            margin-top: 15px;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 20px;
+            font-size: 12px;
+            opacity: 0.5;
+        }
+        
+        footer a {
+            color: white;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="glass-container">
+        <h1>Emoji Decoder 🔍</h1>
+        <p class="subtitle">Paste the broken "square box" (□) emoji below<br>to reveal what it actually is.</p>
+
+        <div class="input-group">
+            <input type="text" id="emoji-input" placeholder="Paste" autocomplete="off" spellcheck="false">
+        </div>
+
+        <div class="result-area">
+            <img id="emoji-image" alt="Decoded Emoji">
+            <div id="status-message">The decoded emoji will appear here.</div>
+        </div>
+        
+        <div id="unicode-info"></div>
+
+        <footer>
+            Images by <a href="https://github.com/twitter/twemoji" target="_blank">Twemoji</a>
+        </footer>
+    </div>
+
+    <script>
+        const inputField = document.getElementById('emoji-input');
+        const emojiImg = document.getElementById('emoji-image');
+        const statusMsg = document.getElementById('status-message');
+        const unicodeInfo = document.getElementById('unicode-info');
+
+        function getTwemojiUrl(char) {
+            let codepoints = [];
+            for (let i = 0; i < char.length; i++) {
+                const codePoint = char.codePointAt(i);
+                if (codePoint) {
+                    codepoints.push(codePoint.toString(16));
+                    if (codePoint > 0xFFFF) {
+                        i++; 
+                    }
+                }
+            }
+
+            const code = codepoints.join('-');
+            return {
+                url: `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/${code}.png`,
+                code: codepoints.map(c => 'U+' + c.toUpperCase()).join(' ')
+            };
+        }
+
+        function decodeEmoji() {
+            let val = inputField.value.trim();
+            if (!val) {
+                resetUI();
+                return;
+            }
+
+            val = val.split(' ')[0];
+
+            const { url, code } = getTwemojiUrl(val);
+
+            statusMsg.style.display = 'none';
+            emojiImg.style.display = 'none';
+            unicodeInfo.innerText = `Code: ${code}`;
+            
+            const tempImg = new Image();
+            tempImg.onload = function() {
+                emojiImg.src = url;
+                emojiImg.style.display = 'block';
+            };
+            tempImg.onerror = function() {
+                statusMsg.innerHTML = "Unsupported or invalid character. 😥";
+                statusMsg.style.color = "#ffcccc";
+                statusMsg.style.display = 'block';
+                emojiImg.style.display = 'none';
+            };
+            tempImg.src = url;
+        }
+
+        function resetUI() {
+            emojiImg.style.display = 'none';
+            statusMsg.innerHTML = "The decoded emoji will appear here.";
+            statusMsg.style.color = "rgba(255, 255, 255, 0.7)";
+            statusMsg.style.display = 'block';
+            unicodeInfo.innerText = "";
+        }
+
+        inputField.addEventListener('input', decodeEmoji);
+        inputField.addEventListener('focus', () => {
+            inputField.select();
+        });
+    </script>
+</body>
+</html>
