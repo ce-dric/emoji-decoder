@@ -32,10 +32,17 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => response || fetch(event.request))
+    fetch(event.request)
+      .then((networkResponse) => {
+        // 네트워크가 연결되어 있으면 항상 최신 버전을 가져오고 캐시를 업데이트함 (Network-First)
+        return caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, networkResponse.clone());
+          return networkResponse;
+        });
+      })
       .catch(() => {
-        // Optional fallback for offline if fetch fails
+        // 오프라인 상태일 때만 기존에 저장된 캐시(이전 버전)를 보여줌
+        return caches.match(event.request);
       })
   );
 });
