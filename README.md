@@ -1,5 +1,7 @@
 # Emoji Decoder 🔍
 
+[![GitHub Pages Deploy](https://github.com/ce-dric/emoji-decoder/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/ce-dric/emoji-decoder/actions)
+
 Have you ever seen a broken "square box" (□) emoji on Windows and wondered what it was? This simple Web App decodes those missing characters into their actual emoji images.
 
 ## Features
