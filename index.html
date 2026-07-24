@@ -29,7 +29,6 @@
             --text-color: #ffffff;
             --input-bg: rgba(255, 255, 255, 0.2);
             --result-bg: rgba(0, 0, 0, 0.15);
-            --history-bg: rgba(255, 255, 255, 0.1);
             --button-bg: rgba(255, 255, 255, 0.2);
             --button-hover: rgba(255, 255, 255, 0.3);
         }
@@ -43,7 +42,6 @@
             --text-color: #333333;
             --input-bg: rgba(255, 255, 255, 0.7);
             --result-bg: rgba(255, 255, 255, 0.5);
-            --history-bg: rgba(0, 0, 0, 0.05);
             --button-bg: rgba(0, 0, 0, 0.05);
             --button-hover: rgba(0, 0, 0, 0.1);
         }
@@ -199,31 +197,6 @@
             font-size: 16px;
         }
 
-        /* History Tray */
-        .history-tray {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 10px;
-            margin-bottom: 15px;
-            background: var(--history-bg);
-            border-radius: 12px;
-            min-height: 30px;
-            align-items: center;
-        }
-        .history-tray::-webkit-scrollbar { height: 4px; }
-        .history-tray::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; }
-        [data-theme="light"] .history-tray::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); }
-        
-        .history-item {
-            cursor: pointer;
-            transition: transform 0.2s;
-            font-size: 20px;
-            white-space: nowrap;
-        }
-        .history-item:hover { transform: scale(1.2); }
-        .history-empty { font-size: 12px; opacity: 0.5; width: 100%; text-align: center; }
-
         /* Result Area */
         .result-container {
             flex-grow: 1; /* Stretch to fill vertical space */
@@ -312,11 +285,6 @@
         <div class="input-group">
             <textarea id="emoji-input" data-i18n-placeholder="placeholder" placeholder="Paste your message here..." autocomplete="off" spellcheck="false"></textarea>
         </div>
-        
-        <!-- History Tray -->
-        <div class="history-tray" id="history-tray">
-            <div class="history-empty" data-i18n="historyEmpty">Recent emojis will appear here</div>
-        </div>
 
         <div class="result-container">
             <div class="result-area" id="result-area">
@@ -341,7 +309,6 @@
                 subtitle: 'Paste the entire message containing broken "square box" (□) emojis<br>to reveal what they actually are.',
                 placeholder: 'Paste your message here...',
                 defaultStatus: 'The decoded message will appear here.',
-                historyEmpty: 'Recent emojis will appear here',
                 footer: 'Parsed and rendered using <a href="https://github.com/twitter/twemoji" target="_blank">Twemoji</a>'
             },
             ko: {
@@ -349,7 +316,6 @@
                 subtitle: '네모(□)로 깨진 이모티콘이 포함된 메시지 전체를<br>아래에 붙여넣어 실제 이모티콘을 확인하세요.',
                 placeholder: '여기에 메시지를 붙여넣으세요...',
                 defaultStatus: '해독된 메시지가 여기에 나타납니다.',
-                historyEmpty: '최근 해독한 이모티콘 기록',
                 footer: '<a href="https://github.com/twitter/twemoji" target="_blank">Twemoji</a>를 사용하여 파싱 및 렌더링됨'
             },
             ja: {
@@ -357,7 +323,6 @@
                 subtitle: '文字化けした「四角い箱」(□)の絵文字を含むメッセージ全体を<br>貼り付けて、実際の絵文字を確認してください。',
                 placeholder: 'ここにメッセージを貼り付けます...',
                 defaultStatus: 'デコードされたメッセージがここに表示されます。',
-                historyEmpty: '最近デコードされた絵文字',
                 footer: '<a href="https://github.com/twitter/twemoji" target="_blank">Twemoji</a>を使用して解析およびレンダリング'
             }
         };
@@ -410,7 +375,6 @@
         const inputField = document.getElementById('emoji-input');
         const resultArea = document.getElementById('result-area');
         const namesArea = document.getElementById('emoji-names');
-        const historyTray = document.getElementById('history-tray');
         
         let emojiDictionary = {};
         
@@ -419,39 +383,6 @@
             .then(res => res.json())
             .then(data => emojiDictionary = data)
             .catch(err => console.error("Failed to load emoji dictionary", err));
-
-        // History Management
-        let history = JSON.parse(localStorage.getItem('emojiHistory') || '[]');
-        
-        function renderHistory() {
-            if (history.length === 0) {
-                historyTray.innerHTML = `<div class="history-empty" data-i18n="historyEmpty">${i18nData[currentLang].historyEmpty}</div>`;
-                return;
-            }
-            historyTray.innerHTML = '';
-            history.forEach(char => {
-                const span = document.createElement('span');
-                span.className = 'history-item';
-                span.textContent = char;
-                twemoji.parse(span, { folder: '72x72', ext: '.png' });
-                span.addEventListener('click', () => {
-                    inputField.value = char;
-                    decodeMessage();
-                });
-                historyTray.appendChild(span);
-            });
-        }
-        renderHistory();
-        
-        function addToHistory(char) {
-            // Only add single/few characters, not full sentences
-            if (char.length > 5) return; 
-            history = history.filter(h => h !== char);
-            history.unshift(char);
-            if (history.length > 10) history.pop();
-            localStorage.setItem('emojiHistory', JSON.stringify(history));
-            renderHistory();
-        }
 
         function resetUI() {
             resultArea.innerHTML = `<div id="status-message" data-i18n="defaultStatus">${i18nData[currentLang].defaultStatus}</div>`;
@@ -489,9 +420,6 @@
                 resultArea.style.justifyContent = 'center';
                 resultArea.style.display = 'flex';
                 resultArea.style.flexWrap = 'wrap';
-                
-                // Add to history if it's a single emoji pasting
-                addToHistory(val);
                 
                 if (images.length === 1) {
                     const rawEmoji = images[0].alt;
