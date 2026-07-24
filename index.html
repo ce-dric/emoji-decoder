@@ -105,9 +105,11 @@
         .glass-container {
             position: relative;
             z-index: 10;
-            width: 90%;
-            max-width: 550px;
-            padding: 40px 30px;
+            width: 90vw;
+            max-width: 380px; /* Vertical messenger width like KakaoTalk */
+            min-height: 65vh; /* Taller vertical layout */
+            max-height: 800px;
+            padding: 40px 25px;
             background: var(--glass-bg);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
@@ -116,6 +118,8 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
             text-align: center;
             transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
         }
 
         .glass-container:hover {
@@ -123,14 +127,15 @@
         }
 
         h1 {
-            font-size: 28px;
+            font-size: clamp(24px, 5vw, 30px);
             font-weight: 700;
+            margin-top: 15px;
             margin-bottom: 10px;
             letter-spacing: -0.5px;
         }
 
         p.subtitle {
-            font-size: 15px;
+            font-size: clamp(13px, 3vw, 15px);
             font-weight: 300;
             opacity: 0.9;
             margin-bottom: 30px;
@@ -173,7 +178,8 @@
 
         /* Result Area */
         .result-area {
-            min-height: 120px;
+            flex-grow: 1; /* Stretch to fill vertical space */
+            min-height: 150px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -183,8 +189,9 @@
             margin-bottom: 10px;
             word-break: break-word;
             text-align: left;
-            font-size: 20px;
+            font-size: clamp(18px, 4vw, 22px);
             line-height: 1.6;
+            overflow-y: auto;
         }
 
         #status-message {
@@ -281,7 +288,7 @@
             }
         };
 
-        let currentLang = localStorage.getItem('preferredLang') || 'en';
+        let currentLang = localStorage.getItem('preferredLang') || 'ko';
         const langSelect = document.getElementById('lang-select');
         langSelect.value = currentLang;
 
