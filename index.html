@@ -260,40 +260,9 @@
             font-size: 12px;
             opacity: 0.7;
             margin-top: 15px;
-            margin-bottom: 15px;
             line-height: 1.4;
             text-align: center;
         }
-
-        /* Action Buttons */
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
-        .action-buttons.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        
-        .action-btn {
-            background: var(--button-bg);
-            color: var(--text-color);
-            border: 1px solid var(--glass-border);
-            border-radius: 8px;
-            padding: 8px 15px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .action-btn:hover { background: var(--button-hover); }
 
         /* Twemoji CSS */
         img.emoji {
@@ -355,11 +324,6 @@
             </div>
             
             <div class="emoji-names" id="emoji-names"></div>
-            
-            <div class="action-buttons" id="action-buttons">
-                <button class="action-btn" id="btn-copy" data-i18n-text="btnCopy">📋 Copy Image</button>
-                <button class="action-btn" id="btn-download" data-i18n-text="btnDownload">💾 Download</button>
-            </div>
         </div>
         
         <footer data-i18n="footer">
@@ -378,8 +342,6 @@
                 placeholder: 'Paste your message here...',
                 defaultStatus: 'The decoded message will appear here.',
                 historyEmpty: 'Recent emojis will appear here',
-                btnCopy: '📋 Copy Image',
-                btnDownload: '💾 Download',
                 footer: 'Parsed and rendered using <a href="https://github.com/twitter/twemoji" target="_blank">Twemoji</a>'
             },
             ko: {
@@ -388,8 +350,6 @@
                 placeholder: '여기에 메시지를 붙여넣으세요...',
                 defaultStatus: '해독된 메시지가 여기에 나타납니다.',
                 historyEmpty: '최근 해독한 이모티콘 기록',
-                btnCopy: '📋 이미지 복사',
-                btnDownload: '💾 저장',
                 footer: '<a href="https://github.com/twitter/twemoji" target="_blank">Twemoji</a>를 사용하여 파싱 및 렌더링됨'
             },
             ja: {
@@ -398,8 +358,6 @@
                 placeholder: 'ここにメッセージを貼り付けます...',
                 defaultStatus: 'デコードされたメッセージがここに表示されます。',
                 historyEmpty: '最近デコードされた絵文字',
-                btnCopy: '📋 画像をコピー',
-                btnDownload: '💾 ダウンロード',
                 footer: '<a href="https://github.com/twitter/twemoji" target="_blank">Twemoji</a>を使用して解析およびレンダリング'
             }
         };
@@ -420,10 +378,6 @@
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
                 const key = el.getAttribute('data-i18n-placeholder');
                 if (i18nData[lang][key]) el.placeholder = i18nData[lang][key];
-            });
-            document.querySelectorAll('[data-i18n-text]').forEach(el => {
-                const key = el.getAttribute('data-i18n-text');
-                if (i18nData[lang][key]) el.textContent = i18nData[lang][key];
             });
             
             if (!document.getElementById('emoji-input').value.trim()) resetUI();
@@ -456,7 +410,6 @@
         const inputField = document.getElementById('emoji-input');
         const resultArea = document.getElementById('result-area');
         const namesArea = document.getElementById('emoji-names');
-        const actionButtons = document.getElementById('action-buttons');
         const historyTray = document.getElementById('history-tray');
         
         let emojiDictionary = {};
@@ -503,37 +456,7 @@
         function resetUI() {
             resultArea.innerHTML = `<div id="status-message" data-i18n="defaultStatus">${i18nData[currentLang].defaultStatus}</div>`;
             namesArea.textContent = '';
-            actionButtons.classList.remove('visible');
         }
-
-        // Action Buttons Setup
-        const btnCopy = document.getElementById('btn-copy');
-        const btnDownload = document.getElementById('btn-download');
-        let currentEmojiImageUrl = '';
-
-        btnCopy.addEventListener('click', async () => {
-            if (!currentEmojiImageUrl) return;
-            try {
-                const response = await fetch(currentEmojiImageUrl);
-                const blob = await response.blob();
-                await navigator.clipboard.write([new ClipboardItem({[blob.type]: blob})]);
-                const originalText = btnCopy.textContent;
-                btnCopy.textContent = "✅ Copied!";
-                setTimeout(() => btnCopy.textContent = originalText, 2000);
-            } catch (err) {
-                alert('Failed to copy image. Your browser might not support it.');
-            }
-        });
-
-        btnDownload.addEventListener('click', () => {
-            if (!currentEmojiImageUrl) return;
-            const a = document.createElement('a');
-            a.href = currentEmojiImageUrl;
-            a.download = 'emoji.png';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        });
 
         // Main Decoder
         function decodeMessage() {
@@ -570,24 +493,17 @@
                 // Add to history if it's a single emoji pasting
                 addToHistory(val);
                 
-                // Show actions only if there's exactly 1 emoji decoded (for simplicity of export)
                 if (images.length === 1) {
-                    currentEmojiImageUrl = images[0].src;
-                    actionButtons.classList.add('visible');
-                    // Find name
                     const rawEmoji = images[0].alt;
                     if (emojiDictionary[rawEmoji]) {
                         namesArea.innerHTML = `<strong>${emojiDictionary[rawEmoji].name}</strong>`;
                     }
                 } else {
-                    actionButtons.classList.remove('visible');
-                    // Show multiple names
                     const names = Array.from(images).map(img => emojiDictionary[img.alt]?.name).filter(Boolean);
                     if (names.length > 0) namesArea.innerHTML = names.join(', ');
                 }
             } else {
                 resultArea.style.display = 'block';
-                actionButtons.classList.remove('visible');
             }
         }
 
